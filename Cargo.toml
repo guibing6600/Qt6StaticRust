@@ -1,0 +1,27 @@
+[package]
+name = "qt6staticrust"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "Qt6StaticRust"
+path = "src/main.rs"
+
+[dependencies]
+# Qt6 Widgets 的 Rust 绑定（基于 cxx）
+qtrs = "0.5.8"
+# 日志：Debug 构建写 running.log；release_max_level_off 让 Release 下日志宏编译为空
+tracing = { version = "0.1", features = ["release_max_level_off"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter", "chrono"] }
+tracing-appender = "0.2"
+# 本地时间戳格式化（中国时区 = 系统本地时间）
+chrono = "0.4"
+
+[build-dependencies]
+# 编译静态插件注册 TU（Q_IMPORT_PLUGIN）
+cc = "1"
+winresource = "0.1"
+
+# vendored 修复：build.rs 支持 QMAKE 环境变量指定静态 Qt（上游只会从 PATH 找 qmake）
+[patch.crates-io]
+qtrs = { path = "vendor/qtrs" }

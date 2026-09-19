@@ -1,0 +1,268 @@
+// src/cpp/layout.h — QVBoxLayout / QHBoxLayout / QGridLayout / FormLayout + toQWidget upcasts
+#pragma once
+
+#include "qwidget.h"
+#include <QtWidgets/QGridLayout>
+#include <QtWidgets/QHBoxLayout>
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QLineEdit>
+#include <QtWidgets/QPushButton>
+#include <QtWidgets/QCheckBox>
+#include <QtWidgets/QComboBox>
+#include <QtWidgets/QSlider>
+#include <QtWidgets/QTextEdit>
+#include <QtWidgets/QVBoxLayout>
+#include <QtWidgets/QWidget>
+#include <QtWidgets/QProgressBar>
+#include <QtWidgets/QRadioButton>
+#include <QtWidgets/QGroupBox>
+#include <QtWidgets/QSpinBox>
+#include <QtWidgets/QListWidget>
+#include <QtWidgets/QMenu>
+#include <QtWidgets/QMenuBar>
+#include <QtWidgets/QTableWidget>
+#include <QtWidgets/QTreeWidget>
+#include <QtWidgets/QStackedWidget>
+#include <QtWidgets/QSplitter>
+#include <QtWidgets/QProgressDialog>
+#include <QtWidgets/QScrollArea>
+#include <QtWidgets/QDateEdit>
+#include <QtWidgets/QTimeEdit>
+#include <QtWidgets/QDateTimeEdit>
+#include <QtWidgets/QPlainTextEdit>
+#include <QtWidgets/QTextBrowser>
+#include <QtWidgets/QFrame>
+#include <QtWidgets/QToolButton>
+#include <QtWidgets/QCalendarWidget>
+#include <QtWidgets/QFormLayout>
+#include "rust/cxx.h"
+
+// --- QVBoxLayout ---
+inline QVBoxLayout *QVBoxLayout_new(QWidget *parent) {
+    return new QVBoxLayout(parent);
+}
+inline void QVBoxLayout_addWidget(QVBoxLayout *layout, QWidget *widget) {
+    layout->addWidget(widget);
+}
+inline void QVBoxLayout_delete(QVBoxLayout *layout) { delete layout; }
+inline void QVBoxLayout_setSpacing(QVBoxLayout *l, int s) { l->setSpacing(s); }
+inline void QVBoxLayout_setContentsMargins(QVBoxLayout *l, int lft, int top,
+                                            int rgt, int bot) {
+    l->setContentsMargins(lft, top, rgt, bot);
+}
+
+// --- QHBoxLayout ---
+inline QHBoxLayout *QHBoxLayout_new(QWidget *parent) {
+    return new QHBoxLayout(parent);
+}
+inline void QHBoxLayout_addWidget(QHBoxLayout *layout, QWidget *widget) {
+    layout->addWidget(widget);
+}
+inline void QHBoxLayout_delete(QHBoxLayout *layout) { delete layout; }
+inline void QHBoxLayout_setSpacing(QHBoxLayout *l, int s) { l->setSpacing(s); }
+inline void QHBoxLayout_setContentsMargins(QHBoxLayout *l, int lft, int top,
+                                            int rgt, int bot) {
+    l->setContentsMargins(lft, top, rgt, bot);
+}
+
+// --- QGridLayout ---
+inline QGridLayout *QGridLayout_new(QWidget *parent) {
+    return new QGridLayout(parent);
+}
+inline void QGridLayout_addWidget(QGridLayout *layout, QWidget *widget,
+                                   int row, int col, int rowSpan,
+                                   int colSpan) {
+    layout->addWidget(widget, row, col, rowSpan, colSpan);
+}
+inline void QGridLayout_delete(QGridLayout *layout) { delete layout; }
+
+// --- Spacer items ---
+inline void QVBoxLayout_addSpacerItem(QVBoxLayout *l, QSpacerItem *s) { l->addSpacerItem(s); }
+inline void QHBoxLayout_addSpacerItem(QHBoxLayout *l, QSpacerItem *s) { l->addSpacerItem(s); }
+
+// --- toQWidget upcasts (cxx doesn't understand C++ inheritance) ---
+inline QWidget *toQWidget_QWidget(QWidget *w) { return w; }
+inline QWidget *toQWidget_QPushButton(QPushButton *w) {
+    return static_cast<QWidget *>(w);
+}
+inline QWidget *toQWidget_QLabel(QLabel *w) {
+    return static_cast<QWidget *>(w);
+}
+inline QWidget *toQWidget_QLineEdit(QLineEdit *w) {
+    return static_cast<QWidget *>(w);
+}
+inline QWidget *toQWidget_QCheckBox(QCheckBox *w) {
+    return static_cast<QWidget *>(w);
+}
+inline QWidget *toQWidget_QComboBox(QComboBox *w) {
+    return static_cast<QWidget *>(w);
+}
+inline QWidget *toQWidget_QTextEdit(QTextEdit *w) {
+    return static_cast<QWidget *>(w);
+}
+inline QWidget *toQWidget_QSlider(QSlider *w) {
+    return static_cast<QWidget *>(w);
+}
+inline QWidget *toQWidget_QProgressBar(QProgressBar *w) {
+    return static_cast<QWidget *>(w);
+}
+inline QWidget *toQWidget_QRadioButton(QRadioButton *w) {
+    return static_cast<QWidget *>(w);
+}
+inline QWidget *toQWidget_QGroupBox(QGroupBox *w) {
+    return static_cast<QWidget *>(w);
+}
+inline QWidget *toQWidget_QTabWidget(QTabWidget *w) {
+    return static_cast<QWidget *>(w);
+}
+inline QWidget *toQWidget_QSpinBox(QSpinBox *w) {
+    return static_cast<QWidget *>(w);
+}
+inline QWidget *toQWidget_QMenu(QMenu *w) {
+    return static_cast<QWidget *>(w);
+}
+inline QWidget *toQWidget_QMenuBar(QMenuBar *w) {
+    return static_cast<QWidget *>(w);
+}
+
+// --- findChild by objectName (for widgets loaded from .ui files) ---
+inline QPushButton *QWidget_findPushButton(QWidget *parent, const std::string &name) {
+    return parent->findChild<QPushButton *>(QString::fromStdString(name));
+}
+inline QLineEdit *QWidget_findLineEdit(QWidget *parent, const std::string &name) {
+    return parent->findChild<QLineEdit *>(QString::fromStdString(name));
+}
+inline QCheckBox *QWidget_findCheckBox(QWidget *parent, const std::string &name) {
+    return parent->findChild<QCheckBox *>(QString::fromStdString(name));
+}
+inline QLabel *QWidget_findLabel(QWidget *parent, const std::string &name) {
+    return parent->findChild<QLabel *>(QString::fromStdString(name));
+}
+inline QWidget *QWidget_findWidget(QWidget *parent, const std::string &name) {
+    return parent->findChild<QWidget *>(QString::fromStdString(name));
+}
+inline QComboBox *QWidget_findComboBox(QWidget *parent, const std::string &name) {
+    return parent->findChild<QComboBox *>(QString::fromStdString(name));
+}
+inline QSlider *QWidget_findSlider(QWidget *parent, const std::string &name) {
+    return parent->findChild<QSlider *>(QString::fromStdString(name));
+}
+inline QTextEdit *QWidget_findTextEdit(QWidget *parent, const std::string &name) {
+    return parent->findChild<QTextEdit *>(QString::fromStdString(name));
+}
+inline QProgressBar *QWidget_findProgressBar(QWidget *parent, const std::string &name) {
+    return parent->findChild<QProgressBar *>(QString::fromStdString(name));
+}
+inline QRadioButton *QWidget_findRadioButton(QWidget *parent, const std::string &name) {
+    return parent->findChild<QRadioButton *>(QString::fromStdString(name));
+}
+inline QGroupBox *QWidget_findGroupBox(QWidget *parent, const std::string &name) {
+    return parent->findChild<QGroupBox *>(QString::fromStdString(name));
+}
+inline QTabWidget *QWidget_findTabWidget(QWidget *parent, const std::string &name) {
+    return parent->findChild<QTabWidget *>(QString::fromStdString(name));
+}
+inline QSpinBox *QWidget_findSpinBox(QWidget *parent, const std::string &name) {
+    return parent->findChild<QSpinBox *>(QString::fromStdString(name));
+}
+inline QListWidget *QWidget_findListWidget(QWidget *parent, const std::string &name) {
+    return parent->findChild<QListWidget *>(QString::fromStdString(name));
+}
+inline QProgressDialog *QWidget_findProgressDialog(QWidget *parent, const std::string &name) {
+    return parent->findChild<QProgressDialog *>(QString::fromStdString(name));
+}
+inline QScrollArea *QWidget_findScrollArea(QWidget *parent, const std::string &name) {
+    return parent->findChild<QScrollArea *>(QString::fromStdString(name));
+}
+inline QTableWidget *QWidget_findTableWidget(QWidget *parent, const std::string &name) {
+    return parent->findChild<QTableWidget *>(QString::fromStdString(name));
+}
+inline QTreeWidget *QWidget_findTreeWidget(QWidget *parent, const std::string &name) {
+    return parent->findChild<QTreeWidget *>(QString::fromStdString(name));
+}
+inline QStackedWidget *QWidget_findStackedWidget(QWidget *parent, const std::string &name) {
+    return parent->findChild<QStackedWidget *>(QString::fromStdString(name));
+}
+inline QSplitter *QWidget_findSplitter(QWidget *parent, const std::string &name) {
+    return parent->findChild<QSplitter *>(QString::fromStdString(name));
+}
+inline QDateEdit *QWidget_findDateEdit(QWidget *parent, const std::string &name) {
+    return parent->findChild<QDateEdit *>(QString::fromStdString(name));
+}
+inline QTimeEdit *QWidget_findTimeEdit(QWidget *parent, const std::string &name) {
+    return parent->findChild<QTimeEdit *>(QString::fromStdString(name));
+}
+inline QDateTimeEdit *QWidget_findDateTimeEdit(QWidget *parent, const std::string &name) {
+    return parent->findChild<QDateTimeEdit *>(QString::fromStdString(name));
+}
+inline QPlainTextEdit *QWidget_findPlainTextEdit(QWidget *parent, const std::string &name) {
+    return parent->findChild<QPlainTextEdit *>(QString::fromStdString(name));
+}
+inline QTextBrowser *QWidget_findTextBrowser(QWidget *parent, const std::string &name) {
+    return parent->findChild<QTextBrowser *>(QString::fromStdString(name));
+}
+inline QFrame *QWidget_findFrame(QWidget *parent, const std::string &name) {
+    return parent->findChild<QFrame *>(QString::fromStdString(name));
+}
+inline QToolButton *QWidget_findToolButton(QWidget *parent, const std::string &name) {
+    return parent->findChild<QToolButton *>(QString::fromStdString(name));
+}
+inline QCalendarWidget *QWidget_findCalendarWidget(QWidget *parent, const std::string &name) {
+    return parent->findChild<QCalendarWidget *>(QString::fromStdString(name));
+}
+// QVBoxLayout enhancements
+inline void QVBoxLayout_addLayout(QVBoxLayout* layout, QLayout* sublayout, int stretch) {
+    layout->addLayout(sublayout, stretch);
+}
+
+inline void QVBoxLayout_addStretch(QVBoxLayout* layout, int stretch) {
+    layout->addStretch(stretch);
+}
+
+inline void QVBoxLayout_addSpacing(QVBoxLayout* layout, int spacing) {
+    layout->addSpacing(spacing);
+}
+
+// QHBoxLayout enhancements
+inline void QHBoxLayout_addLayout(QHBoxLayout* layout, QLayout* sublayout, int stretch) {
+    layout->addLayout(sublayout, stretch);
+}
+
+inline void QHBoxLayout_addStretch(QHBoxLayout* layout, int stretch) {
+    layout->addStretch(stretch);
+}
+
+inline void QHBoxLayout_addSpacing(QHBoxLayout* layout, int spacing) {
+    layout->addSpacing(spacing);
+}
+
+// ============================================================
+// QFormLayout
+// ============================================================
+inline QFormLayout* QFormLayout_new(QWidget* parent) {
+    return new QFormLayout(parent);
+}
+
+inline void QFormLayout_addRow(QFormLayout* layout, const rust::String& label, QWidget* widget) {
+    layout->addRow(QString::fromStdString(std::string(label)), widget);   
+}
+
+inline void QFormLayout_addRowWidget(QFormLayout* layout, QWidget* widget) {
+    layout->addRow(widget);
+}
+
+inline void QFormLayout_setSpacing(QFormLayout* layout, int spacing) {
+    layout->setSpacing(spacing);
+}
+
+inline void QFormLayout_delete(QFormLayout* layout) {
+    delete layout;
+}
+
+inline void QFormLayout_setContentsMargins(QFormLayout* layout, int left, int top, int right, int bottom) {
+    layout->setContentsMargins(left, top, right, bottom);
+}
+
+inline QLayout *toQLayout_QFormLayout(QFormLayout *layout) {
+    return static_cast<QLayout *>(layout);
+}

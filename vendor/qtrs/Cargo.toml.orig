@@ -1,0 +1,40 @@
+[package]
+name = "qtrs"
+version = "0.5.8"
+edition = "2021"
+rust-version = "1.85.0"
+authors = ["zhanghaoxvan <3592114583@qq.com>"]
+license = "MIT OR Apache-2.0"
+description = "qtrs - A type-safe, builder-pattern-driven Qt6 GUI library for Rust"
+repository = "https://github.com/zhanghaoxvan/qtrs"
+readme = "README.md"
+keywords = ["qt", "gui", "qt6", "widgets", "cxx"]
+categories = ["gui", "api-bindings"]
+
+[dependencies]
+cxx = "1.0"
+
+[build-dependencies]
+cxx-build = "1.0"
+
+[dev-dependencies]
+pulldown-cmark = "0.13.4"
+
+[lints.rust]
+unexpected_cfgs = { level = "allow", check-cfg = ['cfg(qt_5)', 'cfg(qt_6)'] }
+
+[[example]]
+name = "basic"
+path = "examples/basic/basic.rs"
+
+[[example]]
+name = "ui"
+path = "examples/ui/ui.rs"
+
+[[example]]
+name = "demo"
+path = "examples/demo/demo.rs"
+
+[[example]]
+name = "editor"
+path = "examples/editor/editor.rs"

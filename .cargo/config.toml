@@ -1,0 +1,8 @@
+# 构建环境：静态 Qt
+# QT_PREFIX：静态 Qt 根目录（build.rs 与 vendored qtrs 共用；换机器/换版本只改这里）
+# QMAKE：qmake 可执行文件（vendored qtrs 的 build.rs 优先读取）
+# CXXFLAGS：QT_STATIC 选择静态链接宏；Qt6 要求 C++17 且 MSVC 需 /Zc:__cplusplus
+[env]
+QT_PREFIX = "D:\\qt-everywhere-src-6.11.0\\static"
+QMAKE = "D:\\qt-everywhere-src-6.11.0\\static\\bin\\qmake.exe"
+CXXFLAGS = "/DQT_STATIC /std:c++17 /Zc:__cplusplus /permissive- /utf-8"

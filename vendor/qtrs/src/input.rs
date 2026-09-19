@@ -1,0 +1,303 @@
+//! Single-line text input widget.
+//!
+//! Wraps [`QLineEdit`](https://doc.qt.io/qt-6/qlineedit.html).
+
+use cxx::let_cxx_string;
+
+use crate::ffi;
+use crate::signal;
+use crate::widget::AsWidget;
+
+/// A single-line text input field.
+///
+/// `LineEdit` uses a **builder pattern**: call [`LineEdit::new`] to obtain
+/// a [`Builder`], chain `.on_return_pressed(f)`, `.parent(w)`, then call
+/// `.build()`.
+///
+/// # Signals
+///
+/// | Method | Qt signal | When |
+/// |---|---|---|
+/// | [`Builder::on_return_pressed`] | `QLineEdit::returnPressed` | User presses Enter/Return |
+///
+/// # Text caching
+///
+/// The widget stores a local copy of the text. It is updated when you
+/// call [`set_text`](Self::set_text) or [`refresh_text`](Self::refresh_text).
+/// The getter [`text`](Self::text) returns the cached copy without any
+/// FFI call.
+///
+/// # Memory safety
+///
+/// See [`PushButton`] for signal-closure lifecycle rules — the same
+/// parent/no-parent disconnect/reclaim logic applies here.
+///
+/// [`PushButton`]: crate::PushButton
+///
+/// # Example
+///
+/// ```no_run
+/// use qtrs::LineEdit;
+///
+/// let edit = LineEdit::new("type here...")
+///     .on_return_pressed(|| println!("Enter pressed!"))
+///     .build();
+/// ```
+pub struct LineEdit {
+    ptr: *mut ffi::QLineEdit,
+    has_parent: bool,
+    #[allow(dead_code)]
+    text: String,
+    signal_handles: Vec<crate::signal::SignalHandle>,
+}
+
+impl LineEdit {
+    /// Start building a new `QLineEdit`.
+    ///
+    /// Returns a [`Builder`]. Set placeholder text (via the initial value),
+    /// optional callbacks, and an optional parent, then call `.build()`.
+    pub fn new(text: impl Into<String>) -> Builder {
+        Builder::new(text.into())
+    }
+
+    /// Get the cached text.
+    ///
+    /// To read the live value from the Qt widget, call
+    /// [`refresh_text`](Self::refresh_text) first.
+    pub fn text(&self) -> &str {
+        &self.text
+    }
+
+    /// Re-read the current text from the Qt widget.
+    ///
+    /// This fetches `QLineEdit::text()` via FFI and updates the local
+    /// cache returned by [`text`](Self::text).
+    pub fn refresh_text(&mut self) {
+        debug_assert!(!self.ptr.is_null(), "LineEdit::refresh_text on null pointer");
+        self.text = unsafe { ffi::QLineEdit_text(self.ptr) };
+    }
+
+    /// Set the text at runtime.
+    pub fn set_text(&mut self, text: impl Into<String>) {
+        debug_assert!(!self.ptr.is_null(), "LineEdit::set_text on null pointer");
+        self.text = text.into();
+        let_cxx_string!(c_text = &self.text);
+        unsafe { ffi::QLineEdit_setText(self.ptr, &c_text); }
+    }
+
+    /// Clear the text content.
+    pub fn clear(&self) {
+        debug_assert!(!self.ptr.is_null());
+        unsafe { ffi::QLineEdit_clear(self.ptr); }
+    }
+
+    /// Select all text.
+    pub fn select_all(&self) {
+        debug_assert!(!self.ptr.is_null());
+        unsafe { ffi::QLineEdit_selectAll(self.ptr); }
+    }
+
+    /// Copy selected text to clipboard.
+    pub fn copy(&self) {
+        debug_assert!(!self.ptr.is_null());
+        unsafe { ffi::QLineEdit_copy(self.ptr); }
+    }
+
+    /// Cut selected text to clipboard.
+    pub fn cut(&self) {
+        debug_assert!(!self.ptr.is_null());
+        unsafe { ffi::QLineEdit_cut(self.ptr); }
+    }
+
+    /// Paste text from clipboard.
+    pub fn paste(&self) {
+        debug_assert!(!self.ptr.is_null());
+        unsafe { ffi::QLineEdit_paste(self.ptr); }
+    }
+
+    /// Undo the last edit operation.
+    pub fn undo(&self) {
+        debug_assert!(!self.ptr.is_null());
+        unsafe { ffi::QLineEdit_undo(self.ptr); }
+    }
+
+    /// Redo the last undone operation.
+    pub fn redo(&self) {
+        debug_assert!(!self.ptr.is_null());
+        unsafe { ffi::QLineEdit_redo(self.ptr); }
+    }
+
+    /// Set whether the text is read-only.
+    pub fn set_read_only(&self, ro: bool) {
+        debug_assert!(!self.ptr.is_null());
+        unsafe { ffi::QLineEdit_setReadOnly(self.ptr, ro); }
+    }
+
+    /// Returns `true` if the line edit is read-only.
+    pub fn is_read_only(&self) -> bool {
+        debug_assert!(!self.ptr.is_null());
+        unsafe { ffi::QLineEdit_isReadOnly(self.ptr) }
+    }
+
+    /// Set the echo mode (e.g. password mode).
+    pub fn set_echo_mode(&self, mode: i32) {
+        debug_assert!(!self.ptr.is_null());
+        unsafe { ffi::QLineEdit_setEchoMode(self.ptr, mode); }
+    }
+
+    /// Set the maximum input length.
+    pub fn set_max_length(&self, len: i32) {
+        debug_assert!(!self.ptr.is_null());
+        unsafe { ffi::QLineEdit_setMaxLength(self.ptr, len); }
+    }
+
+    /// Get the maximum input length.
+    pub fn max_length(&self) -> i32 {
+        debug_assert!(!self.ptr.is_null());
+        unsafe { ffi::QLineEdit_maxLength(self.ptr) }
+    }
+
+    /// Get the current cursor position.
+    pub fn cursor_position(&self) -> i32 {
+        debug_assert!(!self.ptr.is_null());
+        unsafe { ffi::QLineEdit_cursorPosition(self.ptr) }
+    }
+
+    /// Set the cursor position.
+    pub fn set_cursor_position(&self, pos: i32) {
+        debug_assert!(!self.ptr.is_null());
+        unsafe { ffi::QLineEdit_setCursorPosition(self.ptr, pos); }
+    }
+
+    /// Connect a return-pressed callback to an already-existing widget.
+    pub fn connect_return_pressed<F: Fn()>(&mut self, f: F) {
+        debug_assert!(!self.ptr.is_null());
+        let handle = signal::leak_void(f);
+        unsafe { ffi::QLineEdit_onReturnPressed(self.ptr, handle.token); }
+        self.signal_handles.push(handle);
+    }
+
+    #[doc(hidden)]
+    pub(crate) fn from_raw(ptr: *mut ffi::QLineEdit, text: &str) -> Self {
+        debug_assert!(!ptr.is_null());
+        Self { ptr, has_parent: true, text: text.to_string(), signal_handles: Vec::new() }
+    }
+}
+
+impl AsWidget for LineEdit {
+    fn widget_ptr(&self) -> *mut ffi::QWidget {
+        debug_assert!(!self.ptr.is_null(), "LineEdit::widget_ptr on null pointer");
+        unsafe { ffi::toQWidget_QLineEdit(self.ptr) }
+    }
+
+    fn set_has_parent(&mut self) {
+        self.has_parent = true;
+    }
+}
+
+impl Drop for LineEdit {
+    fn drop(&mut self) {
+        if self.ptr.is_null() { return; }
+        if self.has_parent {
+            unsafe { ffi::QWidget_disconnectAll(self.ptr as *mut _); }
+            for h in self.signal_handles.drain(..) {
+                unsafe { h.reclaim(); }
+            }
+        } else {
+            for h in self.signal_handles.drain(..) {
+                unsafe { h.reclaim(); }
+            }
+            unsafe { ffi::QLineEdit_delete(self.ptr) };
+        }
+        self.ptr = std::ptr::null_mut();
+    }
+}
+
+// ============================================================
+// Builder
+// ============================================================
+
+/// Builder for [`LineEdit`].
+///
+/// Collects initial text, signal callbacks, and parent, then creates the
+/// C++ `QLineEdit` (and connects signals) in [`build`](Self::build).
+pub struct Builder {
+    text: String,
+    read_only: bool,
+    echo_mode: Option<i32>,
+    max_length: Option<i32>,
+    on_return_pressed: Option<Box<dyn Fn()>>,
+    parent: Option<*mut ffi::QWidget>,
+}
+
+impl Builder {
+    fn new(text: String) -> Self {
+        Self { text, read_only: false, echo_mode: None, max_length: None, on_return_pressed: None, parent: None }
+    }
+
+    /// Make the line edit read-only.
+    pub fn read_only(mut self, ro: bool) -> Self { self.read_only = ro; self }
+
+    /// Set the echo mode (e.g. password mode).
+    pub fn echo_mode(mut self, mode: i32) -> Self { self.echo_mode = Some(mode); self }
+
+    /// Set the maximum input length.
+    pub fn max_length(mut self, len: i32) -> Self { self.max_length = Some(len); self }
+
+    /// Set the callback for when the user presses Enter/Return.
+    ///
+    /// The closure is stored on the heap and reclaimed when the widget
+    /// is dropped (only if the widget has no Qt parent).
+    pub fn on_return_pressed<F: Fn() + 'static>(mut self, f: F) -> Self {
+        self.on_return_pressed = Some(Box::new(f));
+        self
+    }
+
+    /// Set the parent widget.
+    ///
+    /// The parent manages the line-edit's C++ lifetime.
+    pub fn parent(mut self, parent: &dyn AsWidget) -> Self {
+        self.parent = Some(parent.widget_ptr());
+        self
+    }
+
+    /// Create the C++ `QLineEdit`, connect signals, and return the Rust
+    /// wrapper.
+    ///
+    /// This is the terminal method of the builder pattern.
+    pub fn build(self) -> LineEdit {
+        let_cxx_string!(c_text = &self.text);
+        let ptr = unsafe {
+            ffi::QLineEdit_new(
+                &c_text,
+                self.parent.unwrap_or(std::ptr::null_mut()),
+            )
+        };
+        assert!(!ptr.is_null(), "QLineEdit_new returned null");
+
+        let has_parent = self.parent.is_some();
+        let mut signal_handles = Vec::new();
+
+        if self.read_only { unsafe { ffi::QLineEdit_setReadOnly(ptr, true); } }
+        if let Some(mode) = self.echo_mode { unsafe { ffi::QLineEdit_setEchoMode(ptr, mode); } }
+        if let Some(len) = self.max_length { unsafe { ffi::QLineEdit_setMaxLength(ptr, len); } }
+
+        if let Some(cb) = self.on_return_pressed {
+            let handle = signal::leak_void(cb);
+            unsafe { ffi::QLineEdit_onReturnPressed(ptr, handle.token); }
+            signal_handles.push(handle);
+        }
+
+        LineEdit {
+            ptr,
+            has_parent,
+            text: self.text,
+            signal_handles,
+        }
+    }
+
+    /// Build and show the widget.
+    pub fn show(self) -> LineEdit {
+        self.build()
+    }
+}

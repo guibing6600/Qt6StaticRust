@@ -1,0 +1,411 @@
+# Changelog
+
+All notable changes to `qtrs` will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+---
+
+## [0.5.8] - 2026-08-28
+
+### Added
+
+- **Compile-time `.ui` / `.qrc` embedding (`qtrs-build` crate)**:
+  - New companion crate `qtrs-build` compiles a project's Qt Designer
+    `.ui` files and Rcc `.qrc` resources into the final binary at build
+    time.
+  - `qtrs_build::Ui::embed()` embeds every `<package>/ui/*.ui` file as a
+    Qt resource at `:/qrc/<name>.ui`, so `UiLoader::load(":/qrc/<name>.ui")`
+    works with no filesystem access. Files are validated with `uic` during
+    the build.
+  - `qtrs_build::Rcc::embed()` embeds every `<package>/resources/*.qrc`
+    resource archive unchanged (available under `:/...`).
+  - Generated Qt resource objects are linked with `+whole-archive` so their
+    `qInitResources_*` static initializers run before `main()`, auto
+    registering the resources — no manual init call required.
+  - `QtTools` lookup lets you point at Qt5/Qt6 `rcc`/`uic` (e.g.
+    `qtrs_build::Ui::embed_with(QtTools::unix6())`).
+  - When no `.ui`/`.qrc` files (or no Qt tools) are found, the helper emits
+    an empty archive and degrades gracefully instead of failing the build.
+  - `testapps/embed` end-to-end test app exercises both `.ui` and `.qrc`
+    embedding.
+
+## [0.5.7] - 2026-08-10
+
+### Added
+
+- **Spacer Widget (QSpacerItem)**: 
+  - Full Rust binding for Qt's `QSpacerItem`, enabling flexible layout spacing.
+  - Added `SpacerExt` trait, allowing direct `.add_spacer()` calls on `VBoxLayout` and `HBoxLayout`.
+  - Convenience constructors: `Spacer::horizontal_expanding()`, `Spacer::vertical_expanding()`, `Spacer::fixed(width, height)`.
+  - Exported all standard `SizePolicy` constants (`FIXED`, `EXPANDING`, `PREFERRED`, etc.).
+
+### Fixed
+
+- **`find!` Macro Upgrade (Base UI Lookup)**:
+  - The core widget-finding macro now includes **`file!()` and `line!()`** in its `panic!` message
+  - When `Widget::find` fails in **debug builds**, it immediately prints the exact source file and line number where the macro was invoked
+  - This eliminates the guesswork for UI binding errors: you no longer have to grep for widget names; you just jump straight to the line of code causing the panic
+
+- **`find_match!` Macro Overhaul**:
+  - **Debug Experience Upgrade**: In `debug` builds, when `Widget::find()` fails to locate a UI control, the macro now triggers a precise `debug_assert!`
+  - **Instant Locatability**: The panic message now includes the **widget kind**, the **expected object name**, and the **exact Rust file path + line number** (`file!()` and `line!()`) where the lookup occurred
+  - This drastically reduces debugging time for "widget not found" crashes, especially across the Rust/C++ FFI boundary
+
+---
+
+## [0.5.6] - 2026-08-09
+
+### Added
+- `ListWidget` checkbox support:
+  - `set_item_checkable(row, checkable)` — make an item show a checkbox
+  - `set_item_checked(row, checked)` — set check state
+  - `is_item_checked(row) -> bool` — get check state
+  - `connect_item_changed(callback)` — emit when checkbox toggled
+- CHANGELOG.md (this file)
+
+### Changed
+- FFI now exposes `QListWidget` checkbox operations via `src/ffi/point.rs`
+
+
+---
+
+## [0.5.5] - 2026-08-07
+
+### Added
+- `VariantType::try_extract` (`Option<T>`)
+- `extract_checked!` macro
+
+### Changed
+- `QVariant` type checks use `canConvert`
+- `toXxx` functions take `ok` parameter
+- `Variant::convert` returns `None` on failure
+- Removed type-check macros from C++
+
+### Fixed
+- `42` → `String` works (`Some("42")`)
+- `"hello"` → `i32` returns `None`
+
+---
+
+## [0.5.4] - 2026-08-06
+
+### Added
+- More integer types for `Variant`: `u8`, `i8`, `u16`, `i16`, `f32`
+- `From<&str>` for `Variant`
+- `Debug & Display` trait for `Settings`
+
+### Changed
+- Set **MSRV**(**M**inimum **S**upported **R**ust **V**ersion) to 1.85.0
+
+---
+
+## [0.5.3] - 2026-08-05
+
+### Added
+
+- **QSettings support**: full Rust wrapper for persistent application settings
+  - Cross-platform storage (Windows registry, macOS plist, Linux INI)
+  - `Settings::new()` with organization and application name
+  - Group operations: `begin_group()`, `end_group()`, `group()`
+  - Array operations: `begin_read_array()`, `begin_write_array()`, `set_array_index()`
+  - Type-specific getters/setters: `set()`, `set_int()`, `set_bool()`, `set_double()`
+  - Query methods: `contains()`, `remove()`, `clear()`, `all_keys()`, `child_keys()`, `child_groups()`
+  - Scope and format support: `Scope::User`, `Scope::System`, `Format::Native`, `Format::Ini`
+  - File-backed settings: `Settings::new_from_file()`
+  - Status checking: `is_writable()`, `status()`, `sync()`
+  - Fallback mechanism control: `fallbacks_enabled()`, `set_fallbacks_enabled()`
+
+- **QVariant FFI bindings**: type-safe conversion between Rust and Qt variant types
+  - Support for `i32`, `u32`, `i64`, `bool`, `f64`, `String`, `Vec<String>`, `Vec<u8>`
+  - Type checking: `is_int()`, `is_string()`, `is_bytearray()`, etc.
+  - Constructors and getters for all supported types
+
+- **Auto-generated umbrella file**: `widgets.cpp` now generated by `build.rs`
+  - All `src/cpp/*.h` files are automatically collected and included
+  - `src/cpp/qt_widget.h` now points to the auto-generated umbrella
+
+- **`find!` macro** in `widget` module for convenient `.ui` widget lookup:
+  ```rust
+  let button = find!(window, PushButton, "okBtn");
+  let label = find!(window, Label, "statusLabel", "Custom error message");
+  ```
+
+### Changed
+
+- **FFI naming**: all `src/ffi/q*.rs` files renamed to `src/ffi/*.rs` (dropped `q` prefix)
+  - `qaction.rs` → `action.rs`
+  - `qapplication.rs` → `application.rs`
+  - `qwidget.rs` → `widget.rs`
+  - And 33 more files... consistent with C++ header naming
+
+- **`build.rs` overhaul**: major improvements to the build system
+  - `_all.rs` → `target/qtrs/ffi.rs` (generated in `CARGO_MANIFEST_DIR/target/qtrs/`)
+  - `widgets.cpp` umbrella auto-generated from all `src/cpp/*.h` headers
+  - Removed hardcoded header lists — now scans `src/cpp/` directory
+  - `src/ffi.rs` now includes from `target/qtrs/ffi.rs` instead of `OUT_DIR`
+  - Removed `QTRS_HAS_UI` define (always available)
+  - Removed `src/cpp/qt_widget.cpp` (umbrella now generated)
+
+- **`src/cpp/qt_widget.h`**: now a thin forwarding header that includes `target/qtrs/widgets.cpp`
+
+- **`action.h`**: fixed `QAction` constructor with explicit `QObject*` cast
+
+- **`uiloader.h`**: removed `QTRS_HAS_UI` conditional compilation guards
+
+- **`src/lib.rs`**: `find` macro exported in prelude
+
+### Fixed
+
+- **`QAction` constructor**: properly casts `QWidget*` to `QObject*` for Qt6 compatibility
+
+### Removed
+
+- `src/cpp/qt_widget.cpp` — no longer needed, umbrella is auto-generated
+- Hardcoded header list in `build.rs` — replaced with directory scanning
+
+### Internal
+
+- `src/ffi/` files now use consistent 4-space indentation (auto-fixed by script)
+- `build.rs` generates `target/qtrs/ffi.rs` instead of `OUT_DIR/_all.rs` for better incremental builds
+- `target/qtrs/` directory auto-created by `build.rs` for generated files
+
+
+---
+
+## [0.5.2] - 2026-08-03
+
+Happy Brithday!
+
+### Added
+
+- **QDialog builder**: custom dialog windows with `.title()`, `.modal()`,
+  `.size()`, `.parent()`, and a content closure that receives a
+  `&mut VBoxLayout`. Supports `exec()`, `show()`, `accept()`, `reject()`.
+
+- **QFormLayout**: label-field pair layout with `add_row()` and `add_widget()`
+  — the missing piece for config dialogs and forms.
+
+- **New FFI split**: monolithic `ffi.rs` (1000+ lines) is now 40 files under
+  `src/ffi/`, auto-concatenated by `build.rs` into `$OUT_DIR/_all.rs`.
+
+- **QDialogButtonBox**: standard OK/Cancel/Apply buttons.
+
+- **New AsWidget methods** on all widgets:
+  - `adjust_size()`, `is_active_window()`, `under_mouse()`, `is_window()`
+  - `window() -> Option<Widget>`, `set_window_opacity()`
+  - `set_fixed_width()`, `set_fixed_height()`
+  - `set_mouse_tracking()`, `has_mouse_tracking()`
+  - `set_accept_drops()`, `set_auto_fill_background()`
+  - `show_full_screen()`, `show_maximized()`, `show_minimized()`, `show_normal()`
+  - `set_size_policy()`
+
+- **QComboBox** methods: `count()`, `remove_item()`, `clear()`, `set_editable()`,
+  `is_editable()`, `set_max_count()` (plus Builder equivalents)
+
+- **QPushButton** methods: `set_icon()`, `set_flat()`, `is_flat()`,
+  `set_default()`, `set_auto_default()` (plus Builder equivalents)
+
+- **QCheckBox** methods: `set_tristate()`, `is_tristate()`
+
+- **QLineEdit** methods: `clear()`, `select_all()`, `copy()`, `cut()`,
+  `paste()`, `undo()`, `redo()`, `set_read_only()`, `is_read_only()`,
+  `set_echo_mode()`, `set_max_length()`, `max_length()`, `cursor_position()`,
+  `set_cursor_position()` (plus Builder equivalents)
+
+- **QTextEdit** methods: `set_read_only()`, `is_read_only()`, `append()`,
+  `copy()`, `cut()`, `paste()`, `undo()`, `redo()`, `select_all()`
+
+- **QSlider** methods: `set_orientation()`, `orientation()`,
+  `set_tick_position()`, `set_tick_interval()`, `inverted_appearance()`
+
+- **QSpinBox** method: `set_prefix()`
+
+- **MessageBox**: static functions `information()`, `warning()`, `critical()`,
+  `question()` moved from `dialog` module to `messagebox` (now both object-based
+  and static APIs coexist)
+
+- **Dial, DoubleSpinBox, LcdNumber, ScrollBar, DockWidget, ToolBox** modules
+  added (wrappers for the corresponding Qt classes)
+
+- **New examples**: dialogs and form layout usage in `demo.rs`
+
+### Changed
+
+- `build.rs` now auto-generates `ffi.rs` from `src/ffi/*.rs` instead of
+  compiling `ffi.rs` directly — makes incremental builds faster and
+  file organization cleaner
+
+- `dialog` module now contains `Dialog` builder (custom dialogs) instead of
+  static message boxes; static message box functions moved to `messagebox`
+
+- `Cargo.toml` version bumped to `0.5.2`
+
+- `README.md` updated with new modules and usage examples
+
+- `demo.rs` updated to use `messagebox` for static dialogs
+
+### Removed
+
+- Monolithic `src/ffi.rs` — replaced by 40 files under `src/ffi/` +
+  auto-generation in `build.rs`
+
+### Developer Notes
+
+- All new widgets follow qtrs's existing builder pattern:
+  - `NewWidget::new()` → `Builder` → `.build()`
+  - Setter methods available both on the instance and in the builder
+  - FFI bindings live in `src/ffi/` with corresponding `src/cpp/` headers
+
+- This is the first release after the `ffi.rs` split. If you hit missing
+  FFI symbols, check `src/ffi/` for the corresponding file.
+
+---
+
+## [0.5.1] - 2026-07-27
+
+### Added
+- `move_to()` and `move_to_point()` added as default methods on the `AsWidget`
+  trait (was previously only on `Widget`). Now available on all widgets
+  including `Label`, `PushButton`, `CheckBox`, etc.
+
+---
+
+## [0.5.0] - 2026-07-27
+
+### Added
+- **Model/View architecture**: `StandardItemModel`, `TableView`, `ListView`,
+  `TreeView`, and `ItemSelectionModel` — the full Qt Model/View framework
+  with proper data-model separation. All views support signal callbacks
+  (clicked, double-clicked, expanded, collapsed) and builder-pattern
+  construction.
+- **24 new QWidget methods** added as default methods on the `AsWidget`
+  trait, available on every widget automatically:
+  - Size/position getters: `width()`, `height()`, `x()`, `y()`,
+    `pos() -> Point`, `size() -> (i32, i32)`
+  - Geometry: `set_geometry()`, `geometry() -> (x, y, w, h)`
+  - State queries: `is_visible()`, `is_enabled()`, `is_hidden()`,
+    `is_minimized()`, `is_maximized()`
+  - Window title getter: `window_title() -> String`
+  - Focus management: `set_focus()`, `has_focus()`, `clear_focus()`
+  - Object name: `set_object_name()`, `object_name() -> String`
+  - Repaint: `update()`, `repaint()`
+  - Window actions: `close()`, `raise_widget()`, `lower_widget()`
+  - Size limit getters: `minimum_width()`, `minimum_height()`,
+    `maximum_width()`, `maximum_height()`
+  - Parent access: `parent_widget() -> Option<Widget>`
+- `QObject_disconnectAll()` for safely disconnecting all signals from
+  non-widget QObjects (e.g. `ItemSelectionModel`)
+- `slider_slots` module with `SET_VALUE` slot constant for `Slider`
+
+### Fixed
+- Undefined behavior in `signal.rs`: replaced `std::mem::transmute` with `Box::from_raw` when reconstructing boxed closures from raw pointers
+- `TextEdit::build()` now calls `setPlaceholderText` instead of `setPlainText` for placeholder text
+- Outdated documentation claiming signal closures are "leaked" when widget has parent — they are correctly reclaimed
+- All 19 broken doctests — examples now use correct signal/slot constants from `qtrs::signals`
+
+### Changed
+- Updated `demo.rs` example to use correct signal/slot imports
+- Updated internal doctests to use `# use qtrs::signals::{...}` pattern
+
+---
+
+## [0.4.2] - 2026-7-25
+
+### Fixed
+- Undefined behavior in `signal.rs`: replaced `std::mem::transmute` with `Box::from_raw` when reconstructing boxed closures from raw pointers
+- `TextEdit::build()` now calls `setPlaceholderText` instead of `setPlainText` for placeholder text
+- Outdated documentation claiming signal closures are "leaked" when widget has parent — they are correctly reclaimed
+- All 19 broken doctests — examples now use correct signal/slot constants from `qtrs::signals`
+
+### Added
+- `slider_slots` module with `SET_VALUE` slot constant for `Slider`
+
+### Changed
+- Updated `demo.rs` example to use correct signal/slot imports
+- Updated internal doctests to use `# use qtrs::signals::{...}` pattern
+
+---
+
+## [0.4.1] - 2026-7-20
+
+### Changed
+- Signal closures no longer require `'static` bounds. Capturing local references directly is now
+  possible without `Rc<RefCell<>>` wrappers.
+
+---
+
+## [0.4.0] - 2026-07-17
+
+### Changed
+- **Overhaul:** All widgets refactored for a more human-friendly and idiomatic Rust API.
+- Consistent Builder patterns across all widget types.
+- Improved type signatures and error messages for better IDE support.
+
+---
+
+## [0.3.1] - 2026-07-14
+
+### Fixed
+- Wrong version number in build metadata.
+- Various compiler warnings.
+
+---
+
+## [0.3.0] - 2026-07-13
+
+### Added
+- Core widgets: `Widget`, `MainWindow`, `Label`, `Button`, `LineEdit`, `TextEdit`,
+  `PlainTextEdit`, `CheckBox`, `ComboBox`, `SpinBox`, `Slider`, `ProgressBar`,
+  `ListWidget`, `TableWidget`, `TreeWidget`, `TabWidget`, `StackedWidget`,
+  `Splitter`, `GroupBox`, `Frame`, `ScrollArea`.
+- Layouts: `VBoxLayout`, `HBoxLayout`, `GridLayout`, `FormLayout`.
+- Menus & toolbars: `Menu`, `MenuBar`, `ToolBar`, `Action`, `StatusBar`, `Shortcut`.
+- Dialogs: `FileDialog`, `InputDialog`, `MessageBox`, `ProgressDialog`, `Dialog`.
+- Type-safe signal-slot connections with compile-time checking.
+- Qt Designer `.ui` file support via `UiLoader`.
+- Markdown Editor example.
+- Font support with builder-pattern `Font` struct.
+- Timer widget with `on_timeout` callback.
+- SystemTrayIcon support.
+- Builder-pattern API for all widgets (`.new().property(value).build()`).
+- `prelude` module for convenient imports.
+- Cross-platform support (Windows, Linux, macOS).
+
+---
+
+## [0.2.0] - 2026-07-08
+
+### Added
+- **Type-safe signal-slot connections** with compile-time checking.
+  - `SignalMeta` and `SlotMeta` traits for compile-time type validation.
+  - `ConnectExt` trait with `connect()` and `disconnect()` methods.
+  - Compile-time signal/slot constants for all widgets.
+  - Thread safety checks (`QObject_isInGuiThread`).
+- Additional widgets: `CheckBox`, `ComboBox`, `TextEdit`, `Slider`, `GridLayout`.
+- Qt Designer `.ui` file loading with slot connections.
+- Timer widget with `on_timeout` callback.
+- Demo example showcasing `Slider` ↔ `SpinBox` ↔ `ProgressBar` synchronization.
+
+### Changed
+- Refined builder-pattern API for existing widgets.
+
+### Fixed
+- Cross-platform compatibility improvements.
+
+### Removed
+- QML support (removed to keep focus on QWidgets).
+
+---
+
+## [0.1.0] - 2026-07-04
+
+### Added
+- **Initial release**.
+- Core Qt bindings: `Widget`, `MainWindow`, `Label`, `Button`, `LineEdit`, `PlainTextEdit`.
+- Basic layouts: `VBoxLayout`, `HBoxLayout`.
+- Signal-slot connections via closures.
+- RAII-based memory management (automatic `Drop`).
+- Minimal documentation and examples.
+- QML and `.ui` file support (initial implementation).

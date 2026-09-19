@@ -1,0 +1,12 @@
+# 构建产物
+/target/
+
+# vendored qtrs 的本地构建缓存
+/vendor/qtrs/target/
+
+# 运行期产物（exe 同目录生成）
+running.log
+*.db
+
+# 本地草稿
+err.txt
