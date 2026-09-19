@@ -84,7 +84,7 @@ fn wide(s: &str) -> Vec<u16> {
 fn acquire_single_instance_lock() -> Result<*mut c_void, ()> {
     let name = wide(&format!(
         "Local\\{}SingleInstance",
-        config::CONFIG.process_name
+        config::CONFIG.app_name
     ));
     let handle = unsafe { CreateMutexW(std::ptr::null_mut(), 0, name.as_ptr()) };
     if handle.is_null() {
