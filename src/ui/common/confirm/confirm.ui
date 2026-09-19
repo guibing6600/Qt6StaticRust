@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <widget class="QWidget" name="confirm-overlay">
+  <layout class="QVBoxLayout" name="overlayLayout">
+   <property name="leftMargin"><number>70</number></property>
+   <property name="topMargin"><number>0</number></property>
+   <property name="rightMargin"><number>70</number></property>
+   <property name="bottomMargin"><number>0</number></property>
+   <property name="spacing"><number>0</number></property>
+   <item>
+    <spacer name="topSpacer">
+     <property name="orientation"><enum>Qt::Vertical</enum></property>
+     <property name="sizeHint" stdset="0"><size><width>20</width><height>120</height></size></property>
+    </spacer>
+   </item>
+   <item>
+    <widget class="QWidget" name="confirm-dialog">
+     <layout class="QVBoxLayout" name="dialogLayout">
+      <property name="leftMargin"><number>20</number></property>
+      <property name="topMargin"><number>18</number></property>
+      <property name="rightMargin"><number>20</number></property>
+      <property name="bottomMargin"><number>18</number></property>
+      <property name="spacing"><number>14</number></property>
+      <item>
+       <widget class="QLabel" name="confirm-title">
+        <property name="text"><string>标题</string></property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="msgRow">
+        <property name="spacing"><number>12</number></property>
+        <item>
+         <widget class="QLabel" name="confirm-icon-info">
+          <property name="text"><string>i</string></property>
+          <property name="alignment"><set>Qt::AlignCenter</set></property>
+          <property name="minimumSize"><size><width>36</width><height>36</height></size></property>
+          <property name="maximumSize"><size><width>36</width><height>36</height></size></property>
+          <property name="visible"><bool>false</bool></property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="confirm-icon-warn">
+          <property name="text"><string>!</string></property>
+          <property name="alignment"><set>Qt::AlignCenter</set></property>
+          <property name="minimumSize"><size><width>36</width><height>36</height></size></property>
+          <property name="maximumSize"><size><width>36</width><height>36</height></size></property>
+          <property name="visible"><bool>false</bool></property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="confirm-icon-error">
+          <property name="text"><string>✕</string></property>
+          <property name="alignment"><set>Qt::AlignCenter</set></property>
+          <property name="minimumSize"><size><width>36</width><height>36</height></size></property>
+          <property name="maximumSize"><size><width>36</width><height>36</height></size></property>
+          <property name="visible"><bool>false</bool></property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="confirm-msg">
+          <property name="text"><string>提示内容</string></property>
+          <property name="wordWrap"><bool>true</bool></property>
+          <property name="alignment"><set>Qt::AlignLeft|Qt::AlignVCenter</set></property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="btnRow">
+        <property name="spacing"><number>10</number></property>
+        <item>
+         <spacer name="btnSpacerL">
+          <property name="orientation"><enum>Qt::Horizontal</enum></property>
+          <property name="sizeHint" stdset="0"><size><width>40</width><height>8</height></size></property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btn-confirm-cancel">
+          <property name="text"><string>取消</string></property>
+          <property name="autoDefault"><bool>false</bool></property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btn-confirm-ok">
+          <property name="text"><string>确认</string></property>
+          <property name="autoDefault"><bool>false</bool></property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <spacer name="bottomSpacer">
+     <property name="orientation"><enum>Qt::Vertical</enum></property>
+     <property name="sizeHint" stdset="0"><size><width>20</width><height>160</height></size></property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+</ui>

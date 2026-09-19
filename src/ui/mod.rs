@@ -1,8 +1,11 @@
 //! 主窗口：代码直接构建的最小框架（无 .ui 文件）
 //!
-//! 扩展约定：业务控件加在 `content` 布局里；样式统一写在 `qss.rs`。
+//! 扩展约定：业务控件加在 `content` 布局里；样式统一写在 `qss.rs`；
+//! 跨页面复用的公共组件放 `common/`。
 
 mod qss;
+
+pub mod common;
 
 use qtrs::prelude::*;
 

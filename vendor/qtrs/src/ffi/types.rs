@@ -2,6 +2,7 @@ unsafe extern "C++" {
     include!("src/cpp/qt_widget.h");
     // --- Qt opaque types ---
     type QApplication;
+    type QEventLoop;
     type QWidget;
     type QPushButton;
     type QLabel;

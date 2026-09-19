@@ -181,6 +181,7 @@
 pub mod action;
 pub mod app;
 pub mod button;
+pub mod eventloop;
 pub mod checkbox;
 pub mod combobox;
 pub mod conn;
